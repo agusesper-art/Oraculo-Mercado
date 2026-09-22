@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>El Oráculo del Mercado</title>
+<style>
+  :root {
+    --bg: #1E1B3A;
+    --bg2: #171433;
+    --panel: #2A2650;
+    --panel-border: #3D3870;
+    --gold: #E8C468;
+    --gold-dim: #B99A4E;
+    --text: #F5F1E8;
+    --text-dim: #BFB8DE;
+    --danger: #E08585;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); height: 100%; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100%;
+    background: radial-gradient(circle at 50% 0%, var(--bg2), var(--bg) 70%);
+    color: var(--text);
+    font-family: Georgia, "Times New Roman", serif;
+    padding: max(20px, env(safe-area-inset-top, 0px)) 16px max(24px, env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .wrap { width: 100%; max-width: 480px; }
+  h1 {
+    text-align: center;
+    font-size: 1.5rem;
+    color: var(--gold);
+    margin: 8px 0 2px;
+    letter-spacing: 0.5px;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    font-style: italic;
+    margin-bottom: 22px;
+  }
+  .crystal { text-align: center; font-size: 2.4rem; margin-bottom: 4px; }
+
+  #screen-select .hint {
+    text-align: center;
+    color: var(--text-dim);
+    font-family: Arial, Calibri, sans-serif;
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+    line-height: 1.4;
+  }
+  .color-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .color-btn {
+    border: none;
+    border-radius: 14px;
+    padding: 26px 10px;
+    font-family: Arial, Calibri, sans-serif;
+    font-weight: bold;
+    font-size: 1.05rem;
+    color: #1A1A1A;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+  }
+  .color-btn:active { transform: scale(0.97); }
+  .cb-azul { background: #BDD7EE; }
+  .cb-rojo { background: #F4B6B6; }
+  .cb-amarillo { background: #FCE9A8; }
+  .cb-gris { background: #D9D9D9; }
+
+  #screen-oracle { display: none; }
+  .group-tag {
+    font-family: Arial, Calibri, sans-serif;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .group-tag button {
+    background: none; border: none; color: var(--gold);
+    text-decoration: underline; font-size: 0.8rem; cursor: pointer;
+    font-family: Arial, Calibri, sans-serif; padding: 0; margin-left: 6px;
+  }
+  .counter {
+    text-align: center;
+    font-family: Arial, Calibri, sans-serif;
+    font-size: 0.95rem;
+    color: var(--gold);
+    margin-bottom: 16px;
+    font-weight: bold;
+  }
+  .log { display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px; }
+  .bubble-q {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px 12px 2px 12px;
+    padding: 12px 14px;
+    font-family: Arial, Calibri, sans-serif;
+    font-size: 0.92rem;
+    color: var(--text);
+    align-self: flex-end;
+    max-width: 88%;
+  }
+  .bubble-a {
+    background: rgba(232, 196, 104, 0.12);
+    border: 1px solid var(--gold-dim);
+    border-radius: 12px 12px 12px 2px;
+    padding: 14px 16px;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--text);
+    align-self: flex-start;
+    max-width: 92%;
+    line-height: 1.45;
+  }
+  .qlabel { font-size: 0.7rem; color: var(--text-dim); font-family: Arial, Calibri, sans-serif; display:block; margin-bottom: 4px; font-style: normal; }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    position: sticky;
+    bottom: 8px;
+  }
+  textarea#question {
+    flex: 1;
+    resize: none;
+    border-radius: 10px;
+    border: 1px solid var(--panel-border);
+    background: var(--panel);
+    color: var(--text);
+    font-family: Arial, Calibri, sans-serif;
+    font-size: 0.95rem;
+    padding: 10px 12px;
+    min-height: 44px;
+  }
+  button#askBtn {
+    background: var(--gold);
+    color: #1A1A1A;
+    border: none;
+    border-radius: 10px;
+    font-family: Arial, Calibri, sans-serif;
+    font-weight: bold;
+    padding: 0 18px;
+    cursor: pointer;
+  }
+  button#askBtn:disabled { opacity: 0.4; cursor: default; }
+
+  .blocked {
+    text-align: center;
+    font-family: Arial, Calibri, sans-serif;
+    color: var(--danger);
+    font-size: 0.95rem;
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="crystal">🔮</div>
+  <h1>El Oráculo del Mercado</h1>
+  <div class="subtitle">Simulación — El Tablero Incompleto</div>
+
+  <div id="screen-select">
+    <p class="hint">Elijan un color al azar. No lo miren primero: es el mismo sorteo de la tarjeta.</p>
+    <div class="color-grid">
+      <button class="color-btn cb-azul" data-color="azul">Azul</button>
+      <button class="color-btn cb-rojo" data-color="rojo">Rojo</button>
+      <button class="color-btn cb-amarillo" data-color="amarillo">Amarillo</button>
+      <button class="color-btn cb-gris" data-color="gris">Gris</button>
+    </div>
+  </div>
+
+  <div id="screen-oracle">
+    <div class="group-tag">Grupo: <span id="colorLabel"></span><button id="changeColor">cambiar</button></div>
+    <div class="counter" id="counter"></div>
+    <div class="log" id="log"></div>
+    <div id="inputArea">
+      <div class="input-row">
+        <textarea id="question" placeholder="Escribí tu consulta al Oráculo..."></textarea>
+        <button id="askBtn">Preguntar</button>
+      </div>
+    </div>
+    <div id="blockedMsg" class="blocked" style="display:none;">
+      Ya usaron sus 3 consultas al Oráculo.<br>Ahora el Directorio tiene que decidir con lo que tiene.
+    </div>
+  </div>
+</div>
+
+<script>
+const MAX_CONSULTAS = 3;
+
+// Each persona: a list of {keywords, responses[]} rules checked in order,
+// plus a pool of default responses used when nothing matches.
+const PERSONAS = {
+  azul: {
+    label: "Azul",
+    rules: [
+      { keywords: ["precio", "costo", "cuesta", "aumento", "aumentar"], responses: [
+        "El precio queda congelado si compran hoy, así que en ese sentido no hay apuro ni riesgo.",
+        "Con nosotros el precio no se mueve si cierran la compra ahora mismo.",
+      ]},
+      { keywords: ["stock", "cantidad", "disponib", "hay", "queda"], responses: [
+        "Tenemos stock para todo el año, no debería haber problema de disponibilidad.",
+        "El depósito está bien surtido, no vemos faltantes a la vista.",
+      ]},
+      { keywords: ["plazo", "entrega", "tiempo", "demora", "tarda"], responses: [
+        "Los plazos de entrega son los habituales, nada fuera de lo normal.",
+        "Entregamos en los tiempos de siempre, sin demoras previstas.",
+      ]},
+      { keywords: ["confia", "segur", "certeza", "garant"], responses: [
+        "Somos un proveedor con el que trabajan hace tiempo sin sobresaltos.",
+        "Pueden confiar: es una relación comercial estable, sin sorpresas.",
+      ]},
+    ],
+    fallback: [
+      "Todo tranquilo por acá: tenemos stock para todo el año y el precio queda congelado si compran hoy.",
+      "No hay mucho más para agregar: stock asegurado y precio firme si confirman la compra ahora.",
+    ],
+  },
+  rojo: {
+    label: "Rojo",
+    rules: [
+      { keywords: ["transporte", "huelga", "paro", "camion", "camión", "llega", "llegar"], responses: [
+        "¡Sí, la huelga de transporte! Dicen que puede durar hasta dos meses, ¡no sé cómo va a entrar mercadería a la zona!",
+        "¡Con el paro de transportistas no va a llegar nada por un buen tiempo, dicen dos meses!",
+      ]},
+      { keywords: ["stock", "disponib", "hay", "queda"], responses: [
+        "¿Stock? ¡Con la huelga que se viene, no sé cómo va a llegar nada a la zona!",
+        "Ni idea del stock, ¡lo que me preocupa es que nada va a poder entrar por la huelga!",
+      ]},
+      { keywords: ["precio", "costo", "cuesta"], responses: [
+        "Ni idea de precios ahora, ¡lo que me preocupa es que no va a llegar NADA por la huelga!",
+      ]},
+      { keywords: ["fuente", "segur", "confirmad", "oficial"], responses: [
+        "Lo escuché por ahí, no tengo la fuente exacta, pero todos están hablando de lo mismo.",
+        "No es nada oficial, pero se comenta en todos lados.",
+      ]},
+    ],
+    fallback: [
+      "¡Escuché que hay huelga de transporte y que no va a entrar nada a la zona por dos meses! Estoy preocupadísimo.",
+      "Lo único que sé es lo de la huelga de transporte... dicen que esto se complica para dos meses.",
+    ],
+  },
+  amarillo: {
+    label: "Amarillo",
+    rules: [
+      { keywords: ["precio", "aumento", "aumentar", "sube", "subir", "costo"], responses: [
+        "Dicen que las telas van a aumentar el mes que viene, pero no tengo nada oficial, ojo.",
+        "Se comenta que va a subir el precio de las telas, aunque no sé bien cuánto ni cuándo exactamente.",
+      ]},
+      { keywords: ["fuente", "segur", "confirmad", "oficial"], responses: [
+        "No estoy muy seguro, la verdad. Es lo que se comenta en el barrio, nada más.",
+        "No tengo nada confirmado, che, son cosas que se escuchan por ahí.",
+      ]},
+      { keywords: ["cuando", "fecha", "cuánto", "cuanto"], responses: [
+        "No te podría decir una fecha exacta, eso no lo sé.",
+        "Ni idea del cuándo ni del cuánto, la verdad.",
+      ]},
+      { keywords: ["stock", "disponib"], responses: [
+        "De eso no tengo mucha idea, la verdad, solo sé lo del posible aumento.",
+      ]},
+    ],
+    fallback: [
+      "Mirá, no tengo mucha info concreta... solo escuché que el precio de las telas podría subir pronto, pero no hay nada confirmado.",
+      "No sé bien qué decirte, son cosas sueltas que se comentan, nada seguro.",
+    ],
+  },
+  gris: {
+    label: "Gris",
+    rules: [],
+    fallback: [
+      "Uy, qué pregunta interesante. Mirá, para entender bien el mercado de los cierres hay que remontarse un poco en el tiempo. La industria textil argentina tiene una tradición que arranca a fines del siglo XIX, con las primeras hilanderías instalándose en el Litoral y el Área Metropolitana. Ya en el siglo XX, con la industrialización sustitutiva y las políticas arancelarias, el sector se fue consolidando de a poco. Ahora, en los 90, con la apertura comercial y la Convertibilidad, las cosas se pusieron más complicadas, con cambios constantes en los aranceles a los insumos importados. Ah, por cierto, el único proveedor mayorista de la zona tiene stock todo el año y mantiene el precio si compran hoy. Bueno, como te decía, las cámaras empresariales de la época hicieron gestiones para sostener la protección arancelaria, con resultados bastante dispares según el rubro...",
+      "Buena pregunta, buena pregunta. Sabés que esto me recuerda a toda la cuestión de la desregulación portuaria de los años 90, que cambió mucho los costos logísticos del sector textil. Las empresas tuvieron que rever sus procesos internos para seguir siendo competitivas frente a las importaciones. De hecho, el único proveedor mayorista de la zona tiene stock para todo el año y mantiene el precio si compran hoy, aunque eso es solo un detalle dentro de un panorama mucho más amplio que tiene que ver con la historia arancelaria argentina y sus vaivenes regulatorios a lo largo de las últimas décadas...",
+    ],
+  },
+};
+
+const OFFTOPIC_KEYWORDS = ["nota", "parcial", "examen", "profe", "tarea", "facultad", "clase"];
+const OFFTOPIC_RESPONSE = "Eso no lo manejo yo, yo solo sé del mercado de insumos textiles.";
+
+function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function getResponse(color, question) {
+  const q = question.toLowerCase();
+  if (OFFTOPIC_KEYWORDS.some(k => q.includes(k))) return OFFTOPIC_RESPONSE;
+  const persona = PERSONAS[color];
+  const matched = [];
+  persona.rules.forEach(rule => {
+    if (rule.keywords.some(k => q.includes(k))) matched.push(...rule.responses);
+  });
+  if (matched.length > 0) return pickRandom(matched);
+  return pickRandom(persona.fallback);
+}
+
+let currentColor = null;
+
+function storageKey(color) { return "oraculo_" + color; }
+function loadState(color) {
+  try {
+    const raw = localStorage.getItem(storageKey(color));
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return { used: 0, log: [] };
+}
+function saveState(color, state) {
+  try { localStorage.setItem(storageKey(color), JSON.stringify(state)); } catch (e) {}
+}
+
+function escapeHtml(s) {
+  const d = document.createElement("div");
+  d.innerText = s;
+  return d.innerHTML;
+}
+
+function renderLog(state) {
+  const logEl = document.getElementById("log");
+  logEl.innerHTML = "";
+  state.log.forEach(item => {
+    const q = document.createElement("div");
+    q.className = "bubble-q";
+    q.innerHTML = '<span class="qlabel">Su consulta</span>' + escapeHtml(item.q);
+    logEl.appendChild(q);
+    const a = document.createElement("div");
+    a.className = "bubble-a";
+    a.innerHTML = '<span class="qlabel">El Oráculo responde</span>' + escapeHtml(item.a);
+    logEl.appendChild(a);
+  });
+}
+
+function updateCounter(state) {
+  const remaining = MAX_CONSULTAS - state.used;
+  document.getElementById("counter").textContent =
+    "Consultas disponibles: " + Math.max(remaining, 0) + " / " + MAX_CONSULTAS;
+  const blocked = remaining <= 0;
+  document.getElementById("inputArea").style.display = blocked ? "none" : "block";
+  document.getElementById("blockedMsg").style.display = blocked ? "block" : "none";
+}
+
+function showOracleScreen(color) {
+  currentColor = color;
+  document.getElementById("screen-select").style.display = "none";
+  document.getElementById("screen-oracle").style.display = "block";
+  document.getElementById("colorLabel").textContent = PERSONAS[color].label;
+  const state = loadState(color);
+  renderLog(state);
+  updateCounter(state);
+}
+
+document.querySelectorAll(".color-btn").forEach(btn => {
+  btn.addEventListener("click", () => showOracleScreen(btn.dataset.color));
+});
+
+document.getElementById("changeColor").addEventListener("click", () => {
+  document.getElementById("screen-oracle").style.display = "none";
+  document.getElementById("screen-select").style.display = "block";
+});
+
+document.getElementById("askBtn").addEventListener("click", () => {
+  const qEl = document.getElementById("question");
+  const question = qEl.value.trim();
+  if (!question) return;
+
+  const state = loadState(currentColor);
+  if (state.used >= MAX_CONSULTAS) { updateCounter(state); return; }
+
+  const askBtn = document.getElementById("askBtn");
+  askBtn.disabled = true;
+
+  const provisional = state.log.concat([{ q: question, a: "…el Oráculo está pensando…" }]);
+  renderLog({ log: provisional });
+
+  setTimeout(() => {
+    const answer = getResponse(currentColor, question);
+    state.used += 1;
+    state.log.push({ q: question, a: answer });
+    saveState(currentColor, state);
+    renderLog(state);
+    updateCounter(state);
+    qEl.value = "";
+    askBtn.disabled = false;
+  }, 650); // brief pause so the "pensando" moment feels real
+});
+</script>
+</body>
+</html>
